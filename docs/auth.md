@@ -31,3 +31,4 @@ Envie o header:
 - `Authorization: Bearer <access_token>`
 
 Exemplo: `GET /users/:id` requer token.
+

@@ -97,3 +97,33 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Deploy na Azure VM (CI/CD com Docker)
+
+Este repo está preparado para subir via Docker Compose em uma VM (Azure) e fazer deploy automático a cada `git push` na branch `main` usando GitHub Actions.
+
+### Pré-requisitos na VM
+
+- **Docker + Docker Compose v2** instalados (o comando `docker compose version` deve funcionar)
+- **Porta 3000 liberada** no NSG do Azure (Inbound) se você quiser acessar a API externamente
+- Um diretório de app na VM (ex.: `/opt/praja-api`) com permissões para o usuário do SSH
+- Um arquivo `.env` (na VM, não versionado) com as variáveis (use `env.example` como base)
+
+### Secrets no GitHub (Repo → Settings → Secrets and variables → Actions)
+
+Crie estes secrets:
+
+- **VM_HOST**: IP/DNS público da VM
+- **VM_USER**: usuário (ex.: `azureuser`)
+- **VM_SSH_PRIVATE_KEY**: chave privada SSH (conteúdo completo)
+- **VM_SSH_PORT**: porta SSH (opcional; padrão `22`)
+- **VM_APP_PATH**: caminho na VM (ex.: `/opt/praja-api`)
+
+### Como funciona
+
+O workflow em `.github/workflows/deploy-to-azure-vm.yml`:
+
+- Faz checkout do código
+- Conecta na VM via SSH
+- Envia o código (tar over ssh) para `VM_APP_PATH`
+- Executa `docker compose up -d --build`

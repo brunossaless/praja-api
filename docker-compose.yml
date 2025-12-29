@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    profiles: ['local']
+    environment:
+      POSTGRES_USER: praja
+      POSTGRES_PASSWORD: praja
+      POSTGRES_DB: praja
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Defina no arquivo .env (na VM; não versionar)
+      # DATABASE_URL=
+      # DIRECT_URL=
+      PORT: 3000
+    ports:
+      - '3000:3000'
+
+volumes:
+  db_data:

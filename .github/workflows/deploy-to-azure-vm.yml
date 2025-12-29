@@ -1,0 +1,48 @@
+name: Deploy to Azure VM (Docker Compose)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['master']
+
+concurrency:
+  group: deploy-master
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+
+      - name: Add VM to known_hosts
+        run: |
+          PORT="${{ secrets.VM_SSH_PORT }}"
+          PORT="${PORT:-22}"
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${PORT}" -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload code to VM (tar over ssh)
+        run: |
+          PORT="${{ secrets.VM_SSH_PORT }}"
+          PORT="${PORT:-22}"
+          tar \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./dist' \
+            -czf - . \
+          | ssh -p "${PORT}" "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" \
+            "mkdir -p '${{ secrets.VM_APP_PATH }}' && tar -xzf - -C '${{ secrets.VM_APP_PATH }}'"
+
+      - name: Deploy (docker compose up)
+        run: |
+          PORT="${{ secrets.VM_SSH_PORT }}"
+          PORT="${PORT:-22}"
+          ssh -p "${PORT}" "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" \
+            "set -euo pipefail; cd '${{ secrets.VM_APP_PATH }}'; docker --version; docker compose version; docker compose up -d --build; docker compose ps"

@@ -42,6 +42,11 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# SSH keys (deploy)
+gha_deploy_key
+gha_deploy_key.pub
+*.pem
+
 # temp directory
 .temp
 .tmp
