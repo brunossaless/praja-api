@@ -12,9 +12,11 @@ COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
 
 # Prisma config exige essas vars, mas o `prisma generate` não precisa conectar no banco.
-# Então colocamos URLs "fake" apenas durante o build.
-ENV DATABASE_URL=postgresql://user:pass@localhost:5432/db?schema=public
-ENV DIRECT_URL=postgresql://user:pass@localhost:5432/db?schema=public
+# Usamos defaults "fake" e permitimos sobrescrever via build-args (ex.: vindo do .env na VM).
+ARG DATABASE_URL=postgresql://user:pass@localhost:5432/db?schema=public
+ARG DIRECT_URL=postgresql://user:pass@localhost:5432/db?schema=public
+ENV DATABASE_URL=$DATABASE_URL
+ENV DIRECT_URL=$DIRECT_URL
 
 RUN npx prisma generate
 
