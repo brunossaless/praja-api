@@ -10,6 +10,12 @@ RUN npm ci
 # Prisma schema/migrations first (so prisma generate can run)
 COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
+
+# Prisma config exige essas vars, mas o `prisma generate` não precisa conectar no banco.
+# Então colocamos URLs "fake" apenas durante o build.
+ENV DATABASE_URL=postgresql://user:pass@localhost:5432/db?schema=public
+ENV DIRECT_URL=postgresql://user:pass@localhost:5432/db?schema=public
+
 RUN npx prisma generate
 
 # Build app
