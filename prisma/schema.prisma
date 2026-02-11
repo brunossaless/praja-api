@@ -21,11 +21,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   type      UserType @default(USER)
+  profession  String?
+  cpf         String?
+  rg          String?
+  certificate String?
 
-  posts Post[]
+  jobs Job[]
 }
 
-model Post {
+model Job {
   id        Int      @id @default(autoincrement())
   title     String
   content   String
