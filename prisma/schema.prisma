@@ -13,20 +13,27 @@ enum UserType {
   USER
 }
 
+enum ScheduleStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  type      UserType @default(USER)
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String?
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  type        UserType @default(USER)
   profession  String?
   cpf         String?
   rg          String?
   certificate String?
 
   jobs Job[]
+  schedulesRequested Schedule[] @relation("ScheduleRequester")
 }
 
 model Job {
@@ -37,4 +44,23 @@ model Job {
   updatedAt DateTime @updatedAt
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+  schedules Schedule[]
+}
+
+model Schedule {
+  id                  Int            @id @default(autoincrement())
+  date                String
+  time                String
+  status              ScheduleStatus @default(PENDING)
+  observation         String?
+  responseObservation String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  jobId               Int
+  job                 Job            @relation(fields: [jobId], references: [id])
+  requesterId         Int
+  requester           User           @relation("ScheduleRequester", fields: [requesterId], references: [id])
+
+  @@index([jobId])
+  @@index([requesterId])
 }
