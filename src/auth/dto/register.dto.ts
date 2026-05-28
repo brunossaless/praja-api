@@ -9,36 +9,36 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsString()
-  @MinLength(3)
+  @IsString({ message: 'O nome deve ser um texto' })
+  @MinLength(3, { message: 'O nome deve ter pelo menos 3 caracteres' })
   name: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Informe um e-mail válido' })
   email: string;
 
-  @IsString()
-  @MinLength(8)
+  @IsString({ message: 'A senha deve ser um texto' })
+  @MinLength(8, { message: 'A senha deve ter pelo menos 8 caracteres' })
   password: string;
 
-  @IsEnum(UserType)
+  @IsEnum(UserType, { message: 'O tipo deve ser WORKER ou USER' })
   type: UserType;
 
   @ValidateIf((o: RegisterDto) => o.type === UserType.WORKER)
-  @IsString()
-  @MinLength(1)
+  @IsString({ message: 'A profissão deve ser um texto' })
+  @MinLength(1, { message: 'A profissão é obrigatória para trabalhadores' })
   profession?: string;
 
   @ValidateIf((o: RegisterDto) => o.type === UserType.WORKER)
-  @IsString()
-  @MinLength(11)
+  @IsString({ message: 'O CPF deve ser um texto' })
+  @MinLength(11, { message: 'O CPF deve ter pelo menos 11 caracteres' })
   cpf?: string;
 
   @ValidateIf((o: RegisterDto) => o.type === UserType.WORKER)
-  @IsString()
-  @MinLength(5)
+  @IsString({ message: 'O RG deve ser um texto' })
+  @MinLength(5, { message: 'O RG deve ter pelo menos 5 caracteres' })
   rg?: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'O certificado deve ser um texto' })
   certificate?: string;
 }

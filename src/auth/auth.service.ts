@@ -1,5 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -14,34 +19,44 @@ export class AuthService {
   async register(body: RegisterDto) {
     const hashedPassword = await bcrypt.hash(body.password, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: body.email,
-        name: body.name,
-        password: hashedPassword,
-        type: body.type,
-        profession: body.profession,
-        cpf: body.cpf,
-        rg: body.rg,
-        certificate: body.certificate,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        type: true,
-        profession: true,
-        cpf: true,
-        rg: true,
-        certificate: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          email: body.email,
+          name: body.name,
+          password: hashedPassword,
+          type: body.type,
+          profession: body.profession,
+          cpf: body.cpf,
+          rg: body.rg,
+          certificate: body.certificate,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          type: true,
+          profession: true,
+          cpf: true,
+          rg: true,
+          certificate: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
 
-    const payload = { sub: user.id, email: user.email, type: user.type };
-    const accessToken = await this.jwtService.signAsync(payload);
-    return { accessToken, user };
+      const payload = { sub: user.id, email: user.email, type: user.type };
+      const accessToken = await this.jwtService.signAsync(payload);
+      return { accessToken, user };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Este e-mail já está em uso');
+      }
+      throw error;
+    }
   }
 
   async login(email: string, password: string) {
