@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateJobDto {
   @IsString()
@@ -13,6 +19,10 @@ export class CreateJobDto {
   @IsInt()
   @Type(() => Number)
   userId: number;
+
+  @IsOptional()
+  @IsBoolean()
+  forWomen?: boolean;
 }
 
 export class UpdateJobDto {
@@ -25,4 +35,8 @@ export class UpdateJobDto {
   @IsString()
   @MinLength(1)
   content?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  forWomen?: boolean;
 }

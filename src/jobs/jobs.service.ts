@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Gender, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { userSummarySelect } from 'src/users/user.select';
 import { CreateJobDto, UpdateJobDto } from './jobs.dto';
 
 @Injectable()
@@ -12,40 +14,35 @@ export class JobsService {
         title: data.title,
         content: data.content,
         userId: data.userId,
+        forWomen: data.forWomen ?? false,
       },
     });
   }
 
-  findAll() {
+  /**
+   * Lists jobs, embedding the provider summary.
+   *
+   * When `forWomen` is true, the "Para Mulheres" program rules apply: only
+   * jobs flagged `forWomen` whose provider is a verified woman are returned.
+   */
+  findAll(forWomen?: boolean) {
+    const where: Prisma.JobWhereInput = forWomen
+      ? {
+          forWomen: true,
+          user: { gender: Gender.FEMALE, verified: true },
+        }
+      : {};
+
     return this.prisma.job.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profession: true,
-            certificate: true,
-          },
-        },
-      },
+      where,
+      include: { user: { select: userSummarySelect } },
     });
   }
 
   async findById(id: number) {
     const job = await this.prisma.job.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profession: true,
-            certificate: true,
-          },
-        },
-      },
+      include: { user: { select: userSummarySelect } },
     });
     if (!job) throw new NotFoundException('Job not found');
     return job;
@@ -58,6 +55,7 @@ export class JobsService {
       data: {
         title: data.title,
         content: data.content,
+        forWomen: data.forWomen,
       },
     });
   }

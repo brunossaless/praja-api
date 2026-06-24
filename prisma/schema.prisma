@@ -13,10 +13,54 @@ enum UserType {
   USER
 }
 
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
 enum ScheduleStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum BudgetStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  PAID
+  CANCELED
+}
+
+enum BudgetType {
+  ONE_TIME
+  RECURRING
+}
+
+enum PaymentMethodType {
+  PIX
+  CREDIT_CARD
+}
+
+enum PaymentKind {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum PaymentPurpose {
+  VISIT_FEE
+  BUDGET
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELED
+  REFUNDED
 }
 
 model User {
@@ -31,20 +75,27 @@ model User {
   cpf         String?
   rg          String?
   certificate String?
+  avatarUrl   String?
+  gender      Gender?
+  verified    Boolean  @default(false)
 
-  jobs Job[]
+  jobs               Job[]
   schedulesRequested Schedule[] @relation("ScheduleRequester")
+  budgetsAsWorker    Budget[]   @relation("BudgetWorker")
+  budgetsAsClient    Budget[]   @relation("BudgetClient")
 }
 
 model Job {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   title     String
   content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  forWomen  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
   schedules Schedule[]
+  budgets   Budget[]
 }
 
 model Schedule {
@@ -60,7 +111,77 @@ model Schedule {
   job                 Job            @relation(fields: [jobId], references: [id])
   requesterId         Int
   requester           User           @relation("ScheduleRequester", fields: [requesterId], references: [id])
+  budgets             Budget[]
+  payments            Payment[]
 
   @@index([jobId])
   @@index([requesterId])
+}
+
+model Budget {
+  id                       Int          @id @default(autoincrement())
+  scheduleId               Int
+  schedule                 Schedule     @relation(fields: [scheduleId], references: [id])
+  jobId                    Int?
+  job                      Job?         @relation(fields: [jobId], references: [id])
+  workerId                 Int
+  worker                   User         @relation("BudgetWorker", fields: [workerId], references: [id])
+  clientId                 Int
+  client                   User         @relation("BudgetClient", fields: [clientId], references: [id])
+  title                    String
+  description              String?
+  type                     BudgetType   @default(ONE_TIME)
+  status                   BudgetStatus @default(SENT)
+  subtotalCents            Int          @default(0)
+  totalCents               Int          @default(0)
+  currency                 String       @default("BRL")
+  recurrenceIntervalMonths Int?
+  clientNote               String?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  items    BudgetItem[]
+  payments Payment[]
+
+  @@index([scheduleId])
+  @@index([workerId])
+  @@index([clientId])
+}
+
+model BudgetItem {
+  id              Int    @id @default(autoincrement())
+  budgetId        Int
+  budget          Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  description     String
+  quantity        Int    @default(1)
+  unitAmountCents Int    @default(0)
+  amountCents     Int    @default(0)
+
+  @@index([budgetId])
+}
+
+model Payment {
+  id                Int               @id @default(autoincrement())
+  purpose           PaymentPurpose    @default(BUDGET)
+  budgetId          Int?
+  budget            Budget?           @relation(fields: [budgetId], references: [id])
+  scheduleId        Int?
+  schedule          Schedule?         @relation(fields: [scheduleId], references: [id])
+  method            PaymentMethodType
+  kind              PaymentKind
+  status            PaymentStatus     @default(PENDING)
+  amountCents       Int
+  currency          String            @default("BRL")
+  provider          String?
+  providerPaymentId String?
+  pixQrCodeText     String?
+  pixQrCodeBase64   String?
+  pixExpiresAt      DateTime?
+  installments      Int?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([budgetId])
+  @@index([scheduleId])
+  @@index([providerPaymentId])
 }

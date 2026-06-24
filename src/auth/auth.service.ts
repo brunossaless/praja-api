@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { userSelfSelect } from 'src/users/user.select';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
@@ -30,19 +31,10 @@ export class AuthService {
           cpf: body.cpf,
           rg: body.rg,
           certificate: body.certificate,
+          avatarUrl: body.avatarUrl,
+          gender: body.gender,
         },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          type: true,
-          profession: true,
-          cpf: true,
-          rg: true,
-          certificate: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        select: userSelfSelect,
       });
 
       const payload = { sub: user.id, email: user.email, type: user.type };
@@ -80,6 +72,9 @@ export class AuthService {
         cpf: user.cpf,
         rg: user.rg,
         certificate: user.certificate,
+        avatarUrl: user.avatarUrl,
+        gender: user.gender,
+        verified: user.verified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },

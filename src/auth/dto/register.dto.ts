@@ -1,9 +1,10 @@
-import { UserType } from '@prisma/client';
+import { Gender, UserType } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
   IsOptional,
   IsString,
+  IsUrl,
   MinLength,
   ValidateIf,
 } from 'class-validator';
@@ -41,4 +42,12 @@ export class RegisterDto {
   @IsOptional()
   @IsString({ message: 'O certificado deve ser um texto' })
   certificate?: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: 'A foto de perfil deve ser uma URL válida' })
+  avatarUrl?: string;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'O gênero deve ser FEMALE, MALE ou OTHER' })
+  gender?: Gender;
 }

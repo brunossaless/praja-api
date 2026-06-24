@@ -4,12 +4,16 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateJobDto, UpdateJobDto } from './jobs.dto';
 import { JobsService } from './jobs.service';
 
@@ -24,11 +28,16 @@ export class JobsController {
   }
 
   @Get()
-  findAll() {
-    return this.jobsService.findAll();
+  @UseGuards(JwtAuthGuard)
+  findAll(
+    @Query('forWomen', new ParseBoolPipe({ optional: true }))
+    forWomen?: boolean,
+  ) {
+    return this.jobsService.findAll(forWomen);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findById(@Param('id', ParseIntPipe) id: number) {
     return this.jobsService.findById(id);
   }
